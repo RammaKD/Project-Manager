@@ -1,0 +1,219 @@
+// This is your Prisma schema file
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ========== USERS ==========
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  firstName String
+  lastName  String
+  avatar    String?
+  role      UserRole @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  projectsOwned     Project[]        @relation("ProjectOwner")
+  projectMemberships ProjectMember[]
+  tasksCreated      Task[]           @relation("TaskCreator")
+  tasksAssigned     Task[]           @relation("TaskAssignee")
+  comments          Comment[]
+  taskHistory       TaskHistory[]
+
+  @@map("users")
+}
+
+enum UserRole {
+  ADMIN
+  USER
+}
+
+// ========== PROJECTS ==========
+model Project {
+  id          String        @id @default(uuid())
+  name        String
+  description String?
+  key         String        @unique // ej: "PROJ"
+  color       String        @default("#3b82f6")
+  startDate   DateTime?
+  endDate     DateTime?
+  status      ProjectStatus @default(ACTIVE)
+  createdById String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  // Relations
+  createdBy User            @relation("ProjectOwner", fields: [createdById], references: [id], onDelete: Cascade)
+  members   ProjectMember[]
+  boards    Board[]
+  tasks     Task[]
+  labels    Label[]
+
+  @@map("projects")
+}
+
+enum ProjectStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+// ========== PROJECT MEMBERS ==========
+model ProjectMember {
+  id        String            @id @default(uuid())
+  projectId String
+  userId    String
+  role      ProjectMemberRole @default(MEMBER)
+  joinedAt  DateTime          @default(now())
+
+  // Relations
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+  @@map("project_members")
+}
+
+enum ProjectMemberRole {
+  OWNER
+  ADMIN
+  MEMBER
+  VIEWER
+}
+
+// ========== BOARDS ==========
+model Board {
+  id        String   @id @default(uuid())
+  name      String
+  projectId String
+  isDefault Boolean  @default(false)
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  lists   List[]
+
+  @@map("boards")
+}
+
+// ========== LISTS ==========
+model List {
+  id        String   @id @default(uuid())
+  name      String
+  boardId   String
+  position  Int      @default(0)
+  color     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  board Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  tasks Task[]
+
+  @@map("lists")
+}
+
+// ========== TASKS ==========
+model Task {
+  id             String       @id @default(uuid())
+  title          String
+  description    String?
+  listId         String
+  projectId      String
+  priority       TaskPriority @default(MEDIUM)
+  estimatedHours Float?
+  dueDate        DateTime?
+  position       Int          @default(0)
+  assignedToId   String?
+  createdById    String
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  // Relations
+  list       List          @relation(fields: [listId], references: [id], onDelete: Cascade)
+  project    Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  assignedTo User?         @relation("TaskAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+  createdBy  User          @relation("TaskCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  comments   Comment[]
+  history    TaskHistory[]
+  labels     TaskLabel[]
+
+  @@map("tasks")
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+// ========== LABELS ==========
+model Label {
+  id        String   @id @default(uuid())
+  name      String
+  color     String
+  projectId String
+  createdAt DateTime @default(now())
+
+  // Relations
+  project Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tasks   TaskLabel[]
+
+  @@map("labels")
+}
+
+// ========== TASK LABELS (Many-to-Many) ==========
+model TaskLabel {
+  taskId  String
+  labelId String
+
+  // Relations
+  task  Task  @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  label Label @relation(fields: [labelId], references: [id], onDelete: Cascade)
+
+  @@id([taskId, labelId])
+  @@map("task_labels")
+}
+
+// ========== COMMENTS ==========
+model Comment {
+  id        String   @id @default(uuid())
+  content   String
+  taskId    String
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("comments")
+}
+
+// ========== TASK HISTORY ==========
+model TaskHistory {
+  id        String   @id @default(uuid())
+  taskId    String
+  userId    String
+  action    String // "MOVED", "ASSIGNED", "UPDATED", "COMMENTED"
+  details   String // JSON string con los cambios
+  createdAt DateTime @default(now())
+
+  // Relations
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("task_history")
+}
