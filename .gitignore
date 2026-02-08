@@ -7,8 +7,14 @@ node_modules/
 build/
 **/out/
 out/
+**/out-tsc/
+out-tsc/
 **/.next/
 .next/
+**/bazel-out/
+bazel-out/
+**/tmp/
+tmp/
 
 # Logs
 logs
@@ -28,6 +34,8 @@ Thumbs.db
 coverage/
 **/.nyc_output/
 .nyc_output/
+**/testem.log
+testem.log
 
 # IDEs and editors
 **/.idea/
@@ -48,6 +56,9 @@ coverage/
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+!.vscode/mcp.json
+**/.history/*
+.history/*
 
 # dotenv environment variable files
 **/.env
@@ -83,6 +94,14 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 generated/prisma/
 **/prisma/migrations/.migration_lock.toml
 
-# Angular (para cuando crees el frontend)
+# Angular
 **/.angular/
 .angular/
+**/.angular/cache/
+.sass-cache/
+**/connect.lock
+/libpeerconnection.log
+**/typings/
+typings/
+**/__screenshots__/
+__screenshots__/
