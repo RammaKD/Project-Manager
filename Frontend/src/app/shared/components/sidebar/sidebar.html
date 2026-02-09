@@ -1,0 +1,48 @@
+<aside class="sidebar" [class.closed]="!isOpen()">
+  <div class="sidebar-content">
+    <!-- Navigation -->
+    <nav class="sidebar-nav">
+      <a 
+        routerLink="/projects/list" 
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: false }"
+        class="nav-item"
+      >
+        <span class="icon">📋</span>
+        <span class="label">Projects</span>
+      </a>
+      <a 
+        routerLink="/board" 
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: false }"
+        class="nav-item"
+      >
+        <span class="icon">📊</span>
+        <span class="label">Board</span>
+      </a>
+    </nav>
+
+    <!-- Divider -->
+    <div class="sidebar-divider"></div>
+
+    <!-- User Section -->
+    <div class="sidebar-user-section" *ngIf="hasToken">
+      <div *ngIf="currentUser === null" class="sidebar-loader">
+        <span class="loader-spinner"></span>
+        <span class="loader-text">Loading user...</span>
+      </div>
+      <div class="user-info" *ngIf="currentUser">
+        <div class="user-avatar">
+          {{ currentUser.firstName.charAt(0) }}{{ currentUser.lastName.charAt(0) }}
+        </div>
+        <div class="user-details">
+          <div class="user-name">{{ currentUser.firstName }} {{ currentUser.lastName }}</div>
+          <div class="user-email">{{ currentUser.email }}</div>
+        </div>
+      </div>
+      <button *ngIf="currentUser" (click)="logout()" class="btn-logout-sidebar">
+        <span class="label">Logout</span>
+      </button>
+    </div>
+  </div>
+</aside>

@@ -1,1 +1,35 @@
-/* You can add global styles to this file, and also import other style files */
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+
+html, body {
+	width: 100%;
+	height: 100%;
+	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+	background-color: #2a3440;
+}
+
+:root {
+	--bg: #2a3440;
+	--surface: #ffffff;
+	--surface-2: #3f4b57;
+	--text: #1f2933;
+	--muted: #6b7280;
+	--border: #d9dee3;
+	--panel: #475462;
+	--panel-border: #556474;
+	--input-bg: #2d3943;
+	--input-text: #f3f6f8;
+	--input-placeholder: #c7d0d8;
+	--primary: #566776;
+	--primary-hover: #465663;
+	--nav: #232c35;
+	--sidebar: #2f3b46;
+	--accent: #8a99a6;
+	--danger: #c0392b;
+	--danger-hover: #a93226;
+	--danger-bg: #fdecea;
+	--danger-text: #b42318;
+}

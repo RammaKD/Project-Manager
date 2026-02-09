@@ -1,0 +1,62 @@
+<div class="project-create-container">
+  <button routerLink="/projects" class="btn-back">← Back</button>
+  
+  <div class="form-wrapper">
+    <h2>Create New Project</h2>
+    
+    <form [formGroup]="projectForm" (ngSubmit)="onSubmit()">
+      <!-- Name -->
+      <div class="form-group">
+        <label for="name">Project Name</label>
+        <input
+          id="name"
+          type="text"
+          formControlName="name"
+          placeholder="My Awesome Project"
+        />
+      </div>
+
+      <!-- Key -->
+      <div class="form-group">
+        <label for="key">Project Key</label>
+        <input
+          id="key"
+          type="text"
+          formControlName="key"
+          placeholder="MAP"
+        />
+      </div>
+
+      <!-- Description -->
+      <div class="form-group">
+        <label for="description">Description</label>
+        <textarea
+          id="description"
+          formControlName="description"
+          placeholder="Project description..."
+          rows="4"
+        ></textarea>
+      </div>
+
+      <!-- Color -->
+      <div class="form-group color-group">
+        <label for="color">Color</label>
+        <input
+          id="color"
+          type="color"
+          formControlName="color"
+          class="color-input"
+          value="#007bff"
+        />
+      </div>
+
+      <!-- Error -->
+      <div class="error-message" *ngIf="error">{{ error }}</div>
+
+      <!-- Submit -->
+      <button type="submit" [disabled]="loading || projectForm.invalid" class="btn-submit">
+        {{ loading ? 'Creating...' : 'Create Project' }}
+      </button>
+    </form>
+  </div>
+</div>

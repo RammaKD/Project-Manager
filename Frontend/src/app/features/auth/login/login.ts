@@ -53,4 +53,11 @@ export class LoginComponent {
   get password() {
     return this.loginForm.get('password');
   }
+
+  autofill(): void {
+    this.loginForm.setValue({
+      email: 'ramiro@mail.com',
+      password: 'password123'
+    });
+  }
 }

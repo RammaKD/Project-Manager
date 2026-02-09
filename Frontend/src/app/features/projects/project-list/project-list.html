@@ -1,0 +1,58 @@
+<div class="project-list-container">
+  <div class="project-list-header">
+    <h2>My Projects</h2>
+    <button class="btn-create" routerLink="/projects/create">+ New Project</button>
+  </div>
+
+  <!-- Error message -->
+  <div class="error-message" *ngIf="error">
+    {{ error }}
+  </div>
+
+  <!-- Loading -->
+  <div class="loading" *ngIf="loading">
+    Loading projects...
+  </div>
+
+  <!-- Project List -->
+  <div class="projects-grid" *ngIf="!loading && projects.length > 0">
+    <div class="project-card" *ngFor="let project of projects">
+      <div class="project-header" [style.backgroundColor]="project.color || '#007bff'">
+        <h3>{{ project.name }}</h3>
+        <span class="project-key">{{ project.key }}</span>
+      </div>
+      
+      <div class="project-body">
+        <p class="description">{{ project.description || 'No description' }}</p>
+        
+        <div class="project-meta">
+          <span class="status" [class]="project.status.toLowerCase()">
+            {{ project.status }}
+          </span>
+          <span class="members">{{ project.members.length || 0 }} members</span>
+        </div>
+
+        <div class="project-actions">
+          <a [routerLink]="['/projects', project.id]" class="btn-secondary">View</a>
+            <button (click)="openDeleteModal(project)" class="btn-danger">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty state -->
+  <div class="empty-state" *ngIf="!loading && projects.length === 0">
+    <p>No projects yet. <a routerLink="/projects/create">Create one!</a></p>
+  </div>
+
+  <div class="modal-backdrop" *ngIf="deleteModalOpen">
+    <div class="modal">
+      <h3>Delete project</h3>
+      <p>Are you sure you want to delete "{{ pendingDeleteName }}"?</p>
+      <div class="modal-actions">
+        <button class="btn-secondary" (click)="closeDeleteModal()">Cancel</button>
+        <button class="btn-danger" (click)="confirmDelete()">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>

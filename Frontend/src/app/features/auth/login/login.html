@@ -3,6 +3,10 @@
     <h1>Project Manager</h1>
     <h2>Sign In</h2>
 
+    <button type="button" class="btn-autofill" (click)="autofill()">
+      Autofill test credentials
+    </button>
+
     <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
       <!-- Email -->
       <div class="form-group">

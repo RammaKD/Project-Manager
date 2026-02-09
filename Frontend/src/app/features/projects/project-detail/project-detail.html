@@ -1,0 +1,15 @@
+<div class="project-detail-container">
+  <button routerLink="/projects" class="btn-back">← Back</button>
+  
+  <div *ngIf="loading" class="loading">Loading project...</div>
+  
+  <div *ngIf="error" class="error-message">{{ error }}</div>
+  
+  <div *ngIf="project && !loading" class="project-detail">
+    <h2>{{ project.name }}</h2>
+    <p>{{ project.description }}</p>
+    <p><strong>Status:</strong> {{ project.status }}</p>
+    <p><strong>Key:</strong> {{ project.key }}</p>
+    <p><strong>Members:</strong> {{ project.members.length }}</p>
+  </div>
+</div>
