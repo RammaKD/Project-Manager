@@ -1,0 +1,86 @@
+<div class="register-container">
+  <div class="register-card">
+    <h1>Project Manager</h1>
+    <h2>Create Account</h2>
+
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+      <!-- First Name -->
+      <div class="form-group">
+        <label for="firstName">First Name</label>
+        <input
+          id="firstName"
+          type="text"
+          formControlName="firstName"
+          placeholder="John"
+          [class.error]="firstName?.invalid && firstName?.touched"
+        />
+        <div class="error-message" *ngIf="firstName?.invalid && firstName?.touched">
+          <span *ngIf="firstName?.errors?.['required']">First name is required</span>
+        </div>
+      </div>
+
+      <!-- Last Name -->
+      <div class="form-group">
+        <label for="lastName">Last Name</label>
+        <input
+          id="lastName"
+          type="text"
+          formControlName="lastName"
+          placeholder="Doe"
+          [class.error]="lastName?.invalid && lastName?.touched"
+        />
+        <div class="error-message" *ngIf="lastName?.invalid && lastName?.touched">
+          <span *ngIf="lastName?.errors?.['required']">Last name is required</span>
+        </div>
+      </div>
+
+      <!-- Email -->
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input
+          id="email"
+          type="email"
+          formControlName="email"
+          placeholder="your@email.com"
+          [class.error]="email?.invalid && email?.touched"
+        />
+        <div class="error-message" *ngIf="email?.invalid && email?.touched">
+          <span *ngIf="email?.errors?.['required']">Email is required</span>
+          <span *ngIf="email?.errors?.['email']">Invalid email format</span>
+        </div>
+      </div>
+
+      <!-- Password -->
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input
+          id="password"
+          type="password"
+          formControlName="password"
+          placeholder="••••••••"
+          [class.error]="password?.invalid && password?.touched"
+        />
+        <div class="error-message" *ngIf="password?.invalid && password?.touched">
+          <span *ngIf="password?.errors?.['required']">Password is required</span>
+          <span *ngIf="password?.errors?.['minlength']">Password must be at least 6 characters</span>
+        </div>
+      </div>
+
+      <!-- Error message -->
+      <div class="error-message" *ngIf="error">
+        {{ error }}
+      </div>
+
+      <!-- Submit button -->
+      <button type="submit" [disabled]="loading || registerForm.invalid">
+        <span *ngIf="!loading">Create Account</span>
+        <span *ngIf="loading">Loading...</span>
+      </button>
+
+      <!-- Login link -->
+      <p class="login-link">
+        Already have an account? <a routerLink="/login">Sign in</a>
+      </p>
+    </form>
+  </div>
+</div>
