@@ -1,6 +1,11 @@
 <div class="register-container">
   <div class="register-card">
-    <h1>Project Manager</h1>
+    <h1 class="register-title">
+      <span class="register-logo-wrap">
+        <img class="register-logo" src="assets/images/logoPM.png" alt="Project Manager" />
+      </span>
+      <span>Project Manager</span>
+    </h1>
     <h2>Create Account</h2>
 
     <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">

@@ -1,0 +1,76 @@
+<div class="board-container">
+  <div class="board-header">
+    <button class="btn-back" routerLink="/projects">← Back</button>
+    <h2>Board<span class="board-subtitle" *ngIf="projectName"> · {{ projectName }}</span></h2>
+    <button class="btn-primary" (click)="openCreateModal()" [disabled]="columns.length === 0">+ New Task</button>
+  </div>
+
+  <div class="board-state error" *ngIf="error">{{ error }}</div>
+  <div class="board-state" *ngIf="loading">Loading tasks...</div>
+
+  <div class="board-columns" cdkDropListGroup *ngIf="!loading && !error">
+    <div class="board-column" *ngFor="let column of columns">
+      <div class="column-header">
+        <h3>{{ column.title }}</h3>
+        <span class="count">{{ column.tasks.length }}</span>
+      </div>
+
+      <div
+        class="column-body"
+        cdkDropList
+        [id]="column.id"
+        [cdkDropListData]="column.tasks"
+        [cdkDropListConnectedTo]="columnIds"
+        (cdkDropListDropped)="drop($event)"
+      >
+        <div class="empty" *ngIf="column.tasks.length === 0">
+          No tasks yet
+        </div>
+
+        <div class="task-card" *ngFor="let task of column.tasks" cdkDrag>
+          <div class="task-title">{{ task.title }}</div>
+          <div class="task-desc" *ngIf="task.description">{{ task.description }}</div>
+          <span class="task-priority" *ngIf="task.priority">{{ task.priority }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="board-state" *ngIf="!loading && !error && columns.length === 0">
+    No lists found for this project.
+  </div>
+</div>
+
+<div class="modal-backdrop" *ngIf="createModalOpen">
+  <div class="modal">
+    <h3>Create task</h3>
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="task-title">Title</label>
+        <input id="task-title" type="text" [(ngModel)]="newTaskTitle" />
+      </div>
+      <div class="form-group">
+        <label for="task-desc">Description</label>
+        <textarea id="task-desc" rows="3" [(ngModel)]="newTaskDescription"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="task-list">List</label>
+          <select id="task-list" [(ngModel)]="newTaskListId">
+            <option *ngFor="let column of columns" [value]="column.id">{{ column.title }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="task-priority">Priority</label>
+          <select id="task-priority" [(ngModel)]="newTaskPriority">
+            <option *ngFor="let p of priorities" [value]="p">{{ p }}</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" (click)="closeCreateModal()">Cancel</button>
+      <button class="btn-primary" (click)="createTask()" [disabled]="!newTaskTitle.trim()">Create</button>
+    </div>
+  </div>
+</div>

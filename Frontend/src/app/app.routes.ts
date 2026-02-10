@@ -5,6 +5,7 @@ import { ProjectListComponent } from './features/projects/project-list/project-l
 import { ProjectDetailComponent } from './features/projects/project-detail/project-detail';
 import { ProjectCreateComponent } from './features/projects/project-create/project-create';
 import { LayoutComponent } from './shared/components/layout/layout';
+import { BoardViewComponent } from './features/board/board-view/board-view';
 import { authGuard } from './core/guards/auth-guard';
 import { publicGuard } from './core/guards/public-guard';
 
@@ -29,15 +30,9 @@ export const routes: Routes = [
         children: [
           { path: 'list', component: ProjectListComponent },
           { path: 'create', component: ProjectCreateComponent },
+          { path: ':id/board', component: BoardViewComponent },
           { path: ':id', component: ProjectDetailComponent },
           { path: '', redirectTo: 'list', pathMatch: 'full' }
-        ]
-      },
-      {
-        path: 'board',
-        children: [
-          { path: '', redirectTo: 'view', pathMatch: 'full' }
-          // { path: 'view', component: BoardViewComponent }
         ]
       },
       {

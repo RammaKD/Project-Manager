@@ -11,5 +11,8 @@
     <p><strong>Status:</strong> {{ project.status }}</p>
     <p><strong>Key:</strong> {{ project.key }}</p>
     <p><strong>Members:</strong> {{ project.members.length }}</p>
+    <div class="project-actions">
+      <a [routerLink]="['/projects', project.id, 'board']" class="btn-board">View Board</a>
+    </div>
   </div>
 </div>

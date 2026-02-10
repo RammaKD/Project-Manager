@@ -70,6 +70,7 @@ export interface Task {
   createdById: string;
   createdAt: string;
   updatedAt: string;
+  list?: List;
   assignedTo?: User;
   createdBy: User;
   labels: TaskLabel[];

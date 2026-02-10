@@ -57,3 +57,25 @@
   color: #f3f6f8;
   font-weight: 600;
 }
+
+.project-actions {
+  margin-top: 16px;
+}
+
+.btn-board {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 14px;
+  border-radius: 6px;
+  background: var(--primary);
+  color: #f3f6f8;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 13px;
+  transition: background-color 0.2s;
+}
+
+.btn-board:hover {
+  background: var(--primary-hover);
+}

@@ -86,6 +86,13 @@ export class TasksService {
     return this.prisma.task.findMany({
       where: { projectId },
       include: {
+        list: {
+          select: {
+            id: true,
+            name: true,
+            position: true,
+          },
+        },
         assignedTo: {
           select: {
             id: true,

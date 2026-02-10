@@ -1,10 +1,15 @@
 <div class="login-container">
   <div class="login-card">
-    <h1>Project Manager</h1>
+    <h1 class="login-title">
+      <span class="login-logo-wrap">
+        <img class="login-logo" src="assets/images/logoPM.png" alt="Project Manager" />
+      </span>
+      <span>Project Manager</span>
+    </h1>
     <h2>Sign In</h2>
 
     <button type="button" class="btn-autofill" (click)="autofill()">
-      Autofill test credentials
+      Test User
     </button>
 
     <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
