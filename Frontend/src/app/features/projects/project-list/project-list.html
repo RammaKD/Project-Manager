@@ -4,6 +4,33 @@
     <button class="btn-create" routerLink="/projects/create">+ New Project</button>
   </div>
 
+  <div class="project-controls" *ngIf="!loading">
+    <div class="search-box">
+      <input
+        type="text"
+        placeholder="Search by name..."
+        [(ngModel)]="searchTerm"
+        (ngModelChange)="onFilterChange()"
+      />
+    </div>
+    <div class="filter-group">
+      <label for="sortOrder">Sort</label>
+      <select id="sortOrder" [(ngModel)]="sortOrder" (ngModelChange)="onFilterChange()">
+        <option value="newest">Most recent</option>
+        <option value="oldest">Oldest</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label for="memberFilter">Members</label>
+      <select id="memberFilter" [(ngModel)]="memberFilter" (ngModelChange)="onFilterChange()">
+        <option value="all">All</option>
+        <option value="1-2">1-2</option>
+        <option value="3-5">3-5</option>
+        <option value="6+">6+</option>
+      </select>
+    </div>
+  </div>
+
   <!-- Error message -->
   <div class="error-message" *ngIf="error">
     {{ error }}
@@ -15,8 +42,8 @@
   </div>
 
   <!-- Project List -->
-  <div class="projects-grid" *ngIf="!loading && projects.length > 0">
-    <div class="project-card" *ngFor="let project of projects">
+  <div class="projects-grid" *ngIf="!loading && filteredProjects.length > 0">
+    <div class="project-card" *ngFor="let project of pagedProjects">
       <div class="project-header" [style.backgroundColor]="project.color || '#007bff'">
         <h3>{{ project.name }}</h3>
         <span class="project-key">{{ project.key }}</span>
@@ -30,6 +57,9 @@
             {{ project.status }}
           </span>
           <span class="members">{{ project.members.length || 0 }} members</span>
+          <span class="created" *ngIf="project.createdAt">
+            Created {{ project.createdAt | date:'mediumDate' }}
+          </span>
         </div>
 
         <div class="project-actions">
@@ -42,8 +72,30 @@
   </div>
 
   <!-- Empty state -->
-  <div class="empty-state" *ngIf="!loading && projects.length === 0">
+  <div class="empty-state" *ngIf="!loading && filteredProjects.length === 0">
     <p>No projects yet. <a routerLink="/projects/create">Create one!</a></p>
+  </div>
+
+  <div class="pagination" *ngIf="!loading && totalPages > 1">
+    <button class="btn-secondary" (click)="prevPage()" [disabled]="currentPage === 1">
+      Prev
+    </button>
+    <div class="page-numbers">
+      <ng-container *ngFor="let item of pageItems">
+        <button
+          *ngIf="isPageNumber(item)"
+          class="page-number"
+          (click)="goToPage(item)"
+          [class.active]="item === currentPage"
+        >
+          {{ item }}
+        </button>
+        <span *ngIf="!isPageNumber(item)" class="page-ellipsis">...</span>
+      </ng-container>
+    </div>
+    <button class="btn-secondary" (click)="nextPage()" [disabled]="currentPage === totalPages">
+      Next
+    </button>
   </div>
 
   <div class="modal-backdrop" *ngIf="deleteModalOpen">

@@ -136,6 +136,19 @@
   padding: 12px;
   color: #f3f6f8;
   cursor: grab;
+  transition: border-color 0.2s, transform 0.2s;
+}
+
+.task-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.task-card:hover {
+  border-color: var(--primary);
 }
 
 .task-card:active {
@@ -157,7 +170,24 @@
 
 .task-title {
   font-weight: 600;
-  margin-bottom: 6px;
+  margin: 0;
+}
+
+.task-edit {
+  background: transparent;
+  color: #c7d0d8;
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, background-color 0.2s;
+}
+
+.task-edit:hover {
+  color: #f3f6f8;
+  border-color: var(--primary);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .task-desc {
@@ -173,6 +203,32 @@
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.08);
   color: #c7d0d8;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.priority-low {
+  background: rgba(106, 214, 155, 0.18);
+  color: #7fe6b1;
+  border: 1px solid rgba(106, 214, 155, 0.35);
+}
+
+.priority-medium {
+  background: rgba(250, 200, 99, 0.18);
+  color: #f6d28a;
+  border: 1px solid rgba(250, 200, 99, 0.35);
+}
+
+.priority-high {
+  background: rgba(247, 144, 87, 0.18);
+  color: #f7a46a;
+  border: 1px solid rgba(247, 144, 87, 0.35);
+}
+
+.priority-critical {
+  background: rgba(245, 96, 96, 0.2);
+  color: #ff9b9b;
+  border: 1px solid rgba(245, 96, 96, 0.45);
 }
 
 .modal-backdrop {
@@ -264,4 +320,20 @@
 
 .modal-actions .btn-secondary:hover {
   background: #42505a;
+}
+
+.modal-actions .btn-danger {
+  background: var(--danger);
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.modal-actions .btn-danger:hover {
+  background: var(--danger-hover);
 }

@@ -33,6 +33,55 @@
   background-color: var(--primary-hover);
 }
 
+.project-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 20px;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.search-box {
+  flex: 1 1 260px;
+}
+
+.search-box input {
+  width: 100%;
+  background: var(--input-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  padding: 8px 12px;
+  color: #f3f6f8;
+  font-size: 13px;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 120px;
+}
+
+.filter-group label {
+  font-size: 11px;
+  color: #9ba7b0;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.filter-group select {
+  background: var(--input-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  padding: 7px 10px;
+  color: #f3f6f8;
+  font-size: 13px;
+}
+
 .error-message {
   background-color: var(--danger-bg);
   color: var(--danger-text);
@@ -105,6 +154,8 @@
 .project-meta {
   display: flex;
   gap: 15px;
+  flex-wrap: wrap;
+  align-items: center;
   margin-bottom: 15px;
   font-size: 12px;
   color: #c7d0d8;
@@ -128,6 +179,12 @@
 
 .members {
   display: flex;
+  align-items: center;
+}
+
+.created {
+  color: #9ba7b0;
+  display: inline-flex;
   align-items: center;
 }
 
@@ -221,3 +278,52 @@
 .empty-state a:hover {
   text-decoration: underline;
 }
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 20px;
+}
+.pagination .btn-secondary {
+  flex: 0 0 auto;
+  min-width: 72px;
+  padding: 6px 12px;
+}
+.page-numbers {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.page-number {
+  background: var(--input-bg);
+  border: 1px solid var(--panel-border);
+  color: #c7d0d8;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  min-width: 30px;
+  text-align: center;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+}
+.page-number:hover {
+  border-color: var(--primary);
+  color: #f3f6f8;
+}
+.page-number.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+}
+.page-number:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.page-ellipsis {
+  color: #9ba7b0;
+  font-size: 12px;
+  padding: 0 4px;
+}
+

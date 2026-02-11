@@ -36,8 +36,33 @@ export class BoardViewComponent implements OnInit {
   newTaskPriority: BoardTask['priority'] = 'MEDIUM';
   priorities: BoardTask['priority'][] = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'];
 
+  editModalOpen = false;
+  editTask: BoardTask | null = null;
+  editTaskTitle = '';
+  editTaskDescription = '';
+  editTaskPriority: BoardTask['priority'] = 'MEDIUM';
+  editTaskListId = '';
+
+  deleteModalOpen = false;
+  pendingDeleteTask: BoardTask | null = null;
+
   get columnIds(): string[] {
     return this.columns.map(column => column.id);
+  }
+
+  getPriorityClass(priority?: BoardTask['priority']): string {
+    switch (priority) {
+      case 'LOW':
+        return 'priority-low';
+      case 'MEDIUM':
+        return 'priority-medium';
+      case 'HIGH':
+        return 'priority-high';
+      case 'CRITICAL':
+        return 'priority-critical';
+      default:
+        return '';
+    }
   }
 
   constructor(
@@ -174,6 +199,85 @@ export class BoardViewComponent implements OnInit {
       },
       error: (err) => {
         this.error = err.error?.message || 'Error creating task';
+      }
+    });
+  }
+
+  openEditModal(task: BoardTask, listId: string): void {
+    this.editTask = task;
+    this.editTaskTitle = task.title;
+    this.editTaskDescription = task.description || '';
+    this.editTaskPriority = task.priority || 'MEDIUM';
+    this.editTaskListId = listId;
+    this.editModalOpen = true;
+  }
+
+  closeEditModal(): void {
+    this.editModalOpen = false;
+    this.editTask = null;
+  }
+
+  saveTask(): void {
+    if (!this.editTask || !this.projectId) {
+      return;
+    }
+
+    const taskId = this.editTask.id;
+    const originalListId = this.editTask.listId;
+    const newListId = this.editTaskListId;
+
+    this.tasksService.update(taskId, {
+      title: this.editTaskTitle.trim(),
+      description: this.editTaskDescription.trim() || undefined,
+      priority: this.editTaskPriority || undefined
+    }).subscribe({
+      next: () => {
+        if (newListId && newListId !== originalListId) {
+          this.tasksService.move(taskId, { listId: newListId }).subscribe({
+            next: () => {
+              this.closeEditModal();
+              this.loadProject(this.projectId!);
+            },
+            error: (err) => {
+              this.error = err.error?.message || 'Error moving task';
+            }
+          });
+          return;
+        }
+
+        this.closeEditModal();
+        this.loadProject(this.projectId!);
+      },
+      error: (err) => {
+        this.error = err.error?.message || 'Error updating task';
+      }
+    });
+  }
+
+  openDeleteModal(task: BoardTask): void {
+    this.pendingDeleteTask = task;
+    this.deleteModalOpen = true;
+  }
+
+  closeDeleteModal(): void {
+    this.deleteModalOpen = false;
+    this.pendingDeleteTask = null;
+  }
+
+  confirmDeleteTask(): void {
+    if (!this.pendingDeleteTask || !this.projectId) {
+      return;
+    }
+
+    const taskId = this.pendingDeleteTask.id;
+    this.tasksService.delete(taskId).subscribe({
+      next: () => {
+        this.closeDeleteModal();
+        this.closeEditModal();
+        this.loadProject(this.projectId!);
+      },
+      error: (err) => {
+        this.error = err.error?.message || 'Error deleting task';
       }
     });
   }

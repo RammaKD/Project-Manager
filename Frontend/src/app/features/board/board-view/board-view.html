@@ -28,9 +28,25 @@
         </div>
 
         <div class="task-card" *ngFor="let task of column.tasks" cdkDrag>
-          <div class="task-title">{{ task.title }}</div>
+          <div class="task-card-header">
+            <div class="task-title">{{ task.title }}</div>
+            <button
+              class="task-edit"
+              type="button"
+              title="Edit task"
+              (click)="openEditModal(task, column.id); $event.stopPropagation()"
+            >
+              Edit
+            </button>
+          </div>
           <div class="task-desc" *ngIf="task.description">{{ task.description }}</div>
-          <span class="task-priority" *ngIf="task.priority">{{ task.priority }}</span>
+          <span
+            class="task-priority"
+            *ngIf="task.priority"
+            [ngClass]="getPriorityClass(task.priority)"
+          >
+            {{ task.priority }}
+          </span>
         </div>
       </div>
     </div>
@@ -71,6 +87,52 @@
     <div class="modal-actions">
       <button class="btn-secondary" (click)="closeCreateModal()">Cancel</button>
       <button class="btn-primary" (click)="createTask()" [disabled]="!newTaskTitle.trim()">Create</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" *ngIf="editModalOpen">
+  <div class="modal">
+    <h3>Edit task</h3>
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="edit-title">Title</label>
+        <input id="edit-title" type="text" [(ngModel)]="editTaskTitle" />
+      </div>
+      <div class="form-group">
+        <label for="edit-desc">Description</label>
+        <textarea id="edit-desc" rows="3" [(ngModel)]="editTaskDescription"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="edit-list">List</label>
+          <select id="edit-list" [(ngModel)]="editTaskListId">
+            <option *ngFor="let column of columns" [value]="column.id">{{ column.title }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="edit-priority">Priority</label>
+          <select id="edit-priority" [(ngModel)]="editTaskPriority">
+            <option *ngFor="let p of priorities" [value]="p">{{ p }}</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" (click)="closeEditModal()">Cancel</button>
+      <button class="btn-danger" (click)="openDeleteModal(editTask!)">Delete</button>
+      <button class="btn-primary" (click)="saveTask()" [disabled]="!editTaskTitle.trim()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" *ngIf="deleteModalOpen">
+  <div class="modal">
+    <h3>Delete task</h3>
+    <p>Are you sure you want to delete "{{ pendingDeleteTask?.title }}"?</p>
+    <div class="modal-actions">
+      <button class="btn-secondary" (click)="closeDeleteModal()">Cancel</button>
+      <button class="btn-danger" (click)="confirmDeleteTask()">Delete</button>
     </div>
   </div>
 </div>
