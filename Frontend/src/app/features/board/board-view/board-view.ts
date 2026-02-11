@@ -3,9 +3,11 @@ import { ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DragDropModule, CdkDragDrop, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
+import { forkJoin, of, Observable } from 'rxjs';
 import { TasksService } from '../../../core/services/tasks-service';
 import { ProjectsService } from '../../../core/services/projects-service';
-import { Task, Project, Board, List } from '../../../core/models/project.model';
+import { LabelsService } from '../../../core/services/labels-service';
+import { Task, Project, Board, List, Label } from '../../../core/models/project.model';
 import { RouterLink } from '@angular/router';
 
 type BoardTask = Task;
@@ -27,6 +29,7 @@ export class BoardViewComponent implements OnInit {
   projectId: string | null = null;
   projectName = '';
   columns: BoardColumn[] = [];
+  projectLabels: Label[] = [];
   loading = false;
   error = '';
   createModalOpen = false;
@@ -34,6 +37,7 @@ export class BoardViewComponent implements OnInit {
   newTaskDescription = '';
   newTaskListId = '';
   newTaskPriority: BoardTask['priority'] = 'MEDIUM';
+  newTaskLabelIds: string[] = [];
   priorities: BoardTask['priority'][] = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'];
 
   editModalOpen = false;
@@ -42,6 +46,8 @@ export class BoardViewComponent implements OnInit {
   editTaskDescription = '';
   editTaskPriority: BoardTask['priority'] = 'MEDIUM';
   editTaskListId = '';
+  editTaskLabelIds: string[] = [];
+  originalEditLabelIds: string[] = [];
 
   deleteModalOpen = false;
   pendingDeleteTask: BoardTask | null = null;
@@ -68,7 +74,8 @@ export class BoardViewComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private tasksService: TasksService,
-    private projectsService: ProjectsService
+    private projectsService: ProjectsService,
+    private labelsService: LabelsService
   ) {
     this.projectId = this.route.snapshot.paramMap.get('id');
   }
@@ -91,12 +98,13 @@ export class BoardViewComponent implements OnInit {
       next: (project) => {
         this.projectName = project.name;
         this.columns = this.buildColumnsFromProject(project);
+        this.projectLabels = (project.labels || []).slice().sort((a, b) => a.name.localeCompare(b.name));
         if (!this.newTaskListId && this.columns.length > 0) {
           this.newTaskListId = this.columns[0].id;
         }
         this.loading = false;
       },
-      error: (err) => {
+      error: (err: any) => {
         this.error = err.error?.message || 'Error loading tasks';
         this.loading = false;
       }
@@ -156,7 +164,7 @@ export class BoardViewComponent implements OnInit {
         task.listId = listId;
         task.position = position;
       },
-      error: (err) => {
+      error: (err: any) => {
         this.error = err.error?.message || 'Error moving task';
         if (this.projectId) {
           this.loadProject(this.projectId);
@@ -169,6 +177,7 @@ export class BoardViewComponent implements OnInit {
     this.newTaskTitle = '';
     this.newTaskDescription = '';
     this.newTaskPriority = 'MEDIUM';
+    this.newTaskLabelIds = [];
     if (listId) {
       this.newTaskListId = listId;
     } else if (!this.newTaskListId && this.columns.length > 0) {
@@ -193,22 +202,38 @@ export class BoardViewComponent implements OnInit {
       listId: this.newTaskListId,
       priority: this.newTaskPriority || undefined
     }).subscribe({
-      next: () => {
-        this.closeCreateModal();
-        this.loadProject(this.projectId!);
+      next: (task) => {
+        const assignments = this.newTaskLabelIds.map((labelId) =>
+          this.labelsService.assignToTask(task.id, labelId)
+        );
+        const afterAssign$: Observable<unknown[]> = assignments.length > 0
+          ? forkJoin(assignments)
+          : of([]);
+        afterAssign$.subscribe({
+          next: () => {
+            this.closeCreateModal();
+            this.loadProject(this.projectId!);
+          },
+          error: (err: any) => {
+            this.error = err.error?.message || 'Error assigning labels';
+          }
+        });
       },
-      error: (err) => {
+      error: (err: any) => {
         this.error = err.error?.message || 'Error creating task';
       }
     });
   }
 
   openEditModal(task: BoardTask, listId: string): void {
+    const existingLabelIds = (task.labels || []).map((taskLabel) => taskLabel.labelId);
     this.editTask = task;
     this.editTaskTitle = task.title;
     this.editTaskDescription = task.description || '';
     this.editTaskPriority = task.priority || 'MEDIUM';
     this.editTaskListId = listId;
+    this.editTaskLabelIds = [...existingLabelIds];
+    this.originalEditLabelIds = [...existingLabelIds];
     this.editModalOpen = true;
   }
 
@@ -232,26 +257,65 @@ export class BoardViewComponent implements OnInit {
       priority: this.editTaskPriority || undefined
     }).subscribe({
       next: () => {
-        if (newListId && newListId !== originalListId) {
-          this.tasksService.move(taskId, { listId: newListId }).subscribe({
+        const finishSave = () => {
+          this.syncTaskLabels(taskId, this.originalEditLabelIds, this.editTaskLabelIds).subscribe({
             next: () => {
               this.closeEditModal();
               this.loadProject(this.projectId!);
             },
-            error: (err) => {
+            error: (err: any) => {
+              this.error = err.error?.message || 'Error updating labels';
+            }
+          });
+        };
+
+        if (newListId && newListId !== originalListId) {
+          this.tasksService.move(taskId, { listId: newListId }).subscribe({
+            next: () => {
+              finishSave();
+            },
+            error: (err: any) => {
               this.error = err.error?.message || 'Error moving task';
             }
           });
           return;
         }
 
-        this.closeEditModal();
-        this.loadProject(this.projectId!);
+        finishSave();
       },
-      error: (err) => {
+      error: (err: any) => {
         this.error = err.error?.message || 'Error updating task';
       }
     });
+  }
+
+  toggleLabelSelection(target: 'new' | 'edit', labelId: string, checked: boolean): void {
+    if (target === 'new') {
+      this.newTaskLabelIds = this.updateLabelSelection(this.newTaskLabelIds, labelId, checked);
+      return;
+    }
+
+    this.editTaskLabelIds = this.updateLabelSelection(this.editTaskLabelIds, labelId, checked);
+  }
+
+  private updateLabelSelection(current: string[], labelId: string, checked: boolean): string[] {
+    if (checked) {
+      return current.includes(labelId) ? current : [...current, labelId];
+    }
+
+    return current.filter((id) => id !== labelId);
+  }
+
+  private syncTaskLabels(taskId: string, beforeIds: string[], afterIds: string[]): Observable<unknown[]> {
+    const toAdd = afterIds.filter((id) => !beforeIds.includes(id));
+    const toRemove = beforeIds.filter((id) => !afterIds.includes(id));
+
+    const requests = [
+      ...toAdd.map((labelId) => this.labelsService.assignToTask(taskId, labelId)),
+      ...toRemove.map((labelId) => this.labelsService.removeFromTask(taskId, labelId))
+    ];
+
+    return requests.length > 0 ? forkJoin(requests) : of([]);
   }
 
   openDeleteModal(task: BoardTask): void {
@@ -276,7 +340,7 @@ export class BoardViewComponent implements OnInit {
         this.closeEditModal();
         this.loadProject(this.projectId!);
       },
-      error: (err) => {
+      error: (err: any) => {
         this.error = err.error?.message || 'Error deleting task';
       }
     });

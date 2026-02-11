@@ -15,5 +15,34 @@
     <div class="project-actions">
       <a [routerLink]="['/projects', project.id, 'board']" class="btn-board">View Board</a>
     </div>
+
+    <div class="labels-section">
+      <div class="labels-header">
+        <h3>Labels</h3>
+        <span class="label-error" *ngIf="labelError">{{ labelError }}</span>
+      </div>
+
+      <div class="labels-list" *ngIf="labels.length > 0">
+        <div class="label-chip" *ngFor="let label of labels">
+          <span class="label-color" [style.backgroundColor]="label.color"></span>
+          <span class="label-name">{{ label.name }}</span>
+          <button class="label-delete" type="button" (click)="deleteLabel(label.id)">X</button>
+        </div>
+      </div>
+
+      <p class="labels-empty" *ngIf="labels.length === 0">No labels yet.</p>
+
+      <div class="label-form">
+        <input
+          type="text"
+          placeholder="Label name"
+          [(ngModel)]="newLabelName"
+        />
+        <input type="color" [(ngModel)]="newLabelColor" />
+        <button class="label-add-btn" (click)="createLabel()" [disabled]="!newLabelName.trim()">
+          Add
+        </button>
+      </div>
+    </div>
   </div>
 </div>

@@ -47,6 +47,15 @@
           >
             {{ task.priority }}
           </span>
+          <div class="task-labels" *ngIf="task.labels && task.labels.length">
+            <span
+              class="task-label"
+              *ngFor="let taskLabel of task.labels"
+              [style.backgroundColor]="taskLabel.label.color"
+            >
+              {{ taskLabel.label.name }}
+            </span>
+          </div>
         </div>
       </div>
     </div>
@@ -83,6 +92,24 @@
           </select>
         </div>
       </div>
+      <div class="label-picker" *ngIf="projectLabels.length > 0">
+        <label>Labels</label>
+        <div class="label-options">
+          <label
+            class="label-option"
+            *ngFor="let label of projectLabels"
+            [class.selected]="newTaskLabelIds.includes(label.id)"
+          >
+            <input
+              type="checkbox"
+              [checked]="newTaskLabelIds.includes(label.id)"
+              (change)="toggleLabelSelection('new', label.id, $event.target.checked)"
+            />
+            <span class="label-dot" [style.backgroundColor]="label.color"></span>
+            <span class="label-text">{{ label.name }}</span>
+          </label>
+        </div>
+      </div>
     </div>
     <div class="modal-actions">
       <button class="btn-secondary" (click)="closeCreateModal()">Cancel</button>
@@ -115,6 +142,24 @@
           <select id="edit-priority" [(ngModel)]="editTaskPriority">
             <option *ngFor="let p of priorities" [value]="p">{{ p }}</option>
           </select>
+        </div>
+      </div>
+      <div class="label-picker" *ngIf="projectLabels.length > 0">
+        <label>Labels</label>
+        <div class="label-options">
+          <label
+            class="label-option"
+            *ngFor="let label of projectLabels"
+            [class.selected]="editTaskLabelIds.includes(label.id)"
+          >
+            <input
+              type="checkbox"
+              [checked]="editTaskLabelIds.includes(label.id)"
+              (change)="toggleLabelSelection('edit', label.id, $event.target.checked)"
+            />
+            <span class="label-dot" [style.backgroundColor]="label.color"></span>
+            <span class="label-text">{{ label.name }}</span>
+          </label>
         </div>
       </div>
     </div>
