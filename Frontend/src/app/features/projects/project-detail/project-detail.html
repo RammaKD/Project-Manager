@@ -6,14 +6,105 @@
   <div *ngIf="error" class="error-message">{{ error }}</div>
   
   <div *ngIf="project && !loading" class="project-detail">
-    <h2>{{ project.name }}</h2>
-    <p>{{ project.description }}</p>
-    <p><strong>Status:</strong> {{ project.status }}</p>
-    <p><strong>Key:</strong> {{ project.key }}</p>
-    <p><strong>Members:</strong> {{ project.members.length }}</p>
-    <p><strong>Created:</strong> {{ project.createdAt | date:'mediumDate' }}</p>
-    <div class="project-actions">
-      <a [routerLink]="['/projects', project.id, 'board']" class="btn-board">View Board</a>
+    <div class="project-header-row">
+      <h2>{{ project.name }}</h2>
+      <button class="edit-btn" *ngIf="canEditProject() && !isEditing" (click)="startEdit()">
+        Edit
+      </button>
+    </div>
+
+    <div *ngIf="!isEditing" class="project-summary">
+      <p>{{ project.description }}</p>
+      <p><strong>Status:</strong> {{ project.status }}</p>
+      <p><strong>Key:</strong> {{ project.key }}</p>
+      <p><strong>Members:</strong> {{ project.members.length }}</p>
+      <p><strong>Created:</strong> {{ project.createdAt | date:'mediumDate' }}</p>
+      <div class="project-actions">
+        <a [routerLink]="['/projects', project.id, 'board']" class="btn-board">View Board</a>
+      </div>
+    </div>
+
+    <div *ngIf="isEditing" class="project-edit">
+      <form class="edit-form" [formGroup]="editForm" (ngSubmit)="saveEdit()">
+        <div class="form-group">
+          <label for="edit-name">Project Name</label>
+          <input id="edit-name" type="text" formControlName="name" placeholder="My Awesome Project" />
+          <div class="field-error" *ngIf="editNameControl?.touched && editNameControl?.invalid">
+            Name is required.
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="edit-key">Project Key</label>
+          <input id="edit-key" type="text" maxlength="10" formControlName="key" placeholder="MAP" />
+          <div class="field-error" *ngIf="editKeyControl?.touched && editKeyControl?.invalid">
+            Key must be 2-10 characters.
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="edit-desc">Description</label>
+          <textarea id="edit-desc" rows="3" formControlName="description" placeholder="Project description..."></textarea>
+        </div>
+
+        <div class="form-group color-group">
+          <label for="edit-color">Color</label>
+          <input id="edit-color" type="color" class="color-input" formControlName="color" />
+        </div>
+
+        <div class="error-message" *ngIf="editError">{{ editError }}</div>
+
+        <div class="edit-actions">
+          <button class="cancel-btn" type="button" (click)="cancelEdit()" [disabled]="savingEdit">
+            Cancel
+          </button>
+          <button class="btn-submit" type="submit" [disabled]="editForm.invalid || savingEdit">
+            <span class="btn-spinner" *ngIf="savingEdit"></span>
+            {{ savingEdit ? 'Saving...' : 'Save Changes' }}
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div class="members-section">
+      <div class="members-header">
+        <h3>Members</h3>
+        <span class="member-error" *ngIf="memberError">{{ memberError }}</span>
+      </div>
+
+      <div class="members-list" *ngIf="project.members.length > 0">
+        <div class="member-card" *ngFor="let member of project.members">
+          <div class="member-info">
+            <div class="member-name">{{ member.user.firstName }} {{ member.user.lastName }}</div>
+            <div class="member-email">{{ member.user.email }}</div>
+          </div>
+          <span class="member-role">{{ member.role }}</span>
+          <button
+            class="member-remove"
+            type="button"
+            *ngIf="canRemoveMember(member)"
+            (click)="removeMember(member)"
+          >
+            Remove
+          </button>
+        </div>
+      </div>
+
+      <p class="members-empty" *ngIf="project.members.length === 0">No members yet.</p>
+
+      <div class="member-form" *ngIf="canManageMembers()">
+        <input
+          type="text"
+          placeholder="Email"
+          [(ngModel)]="newMemberEmail"
+        />
+        <select [(ngModel)]="newMemberRole">
+          <option *ngFor="let role of memberRoles" [value]="role">{{ role }}</option>
+        </select>
+        <button class="member-add-btn" (click)="addMember()" [disabled]="!newMemberEmail.trim()">
+          Add Member
+        </button>
+      </div>
     </div>
 
     <div class="labels-section">
@@ -26,13 +117,20 @@
         <div class="label-chip" *ngFor="let label of labels">
           <span class="label-color" [style.backgroundColor]="label.color"></span>
           <span class="label-name">{{ label.name }}</span>
-          <button class="label-delete" type="button" (click)="deleteLabel(label.id)">X</button>
+          <button
+            class="label-delete"
+            type="button"
+            *ngIf="canManageLabels()"
+            (click)="deleteLabel(label.id)"
+          >
+            X
+          </button>
         </div>
       </div>
 
       <p class="labels-empty" *ngIf="labels.length === 0">No labels yet.</p>
 
-      <div class="label-form">
+      <div class="label-form" *ngIf="canManageLabels()">
         <input
           type="text"
           placeholder="Label name"

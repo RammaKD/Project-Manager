@@ -209,9 +209,28 @@ export class ProjectsService {
   async addMember(projectId: string, addMemberDto: AddMemberDto, userId: string) {
     await this.verifyMemberPermission(projectId, userId, ['OWNER', 'ADMIN']);
 
+    if (addMemberDto.role === 'OWNER') {
+      throw new ForbiddenException('Cannot assign OWNER role');
+    }
+
+    const lookupId = addMemberDto.userId;
+    const lookupEmail = addMemberDto.email?.trim();
+
+    if (!lookupId && !lookupEmail) {
+      throw new ConflictException('User identifier is required');
+    }
+
+    const memberCount = await this.prisma.projectMember.count({
+      where: { projectId },
+    });
+
+    if (memberCount >= 20) {
+      throw new ConflictException('Project member limit reached (20)');
+    }
+
     // Verificar que el usuario a agregar exista
     const userExists = await this.prisma.user.findUnique({
-      where: { id: addMemberDto.userId },
+      where: lookupId ? { id: lookupId } : { email: lookupEmail! },
     });
 
     if (!userExists) {
@@ -223,7 +242,7 @@ export class ProjectsService {
       where: {
         projectId_userId: {
           projectId,
-          userId: addMemberDto.userId,
+          userId: userExists.id,
         },
       },
     });
@@ -235,7 +254,7 @@ export class ProjectsService {
     return this.prisma.projectMember.create({
       data: {
         projectId,
-        userId: addMemberDto.userId,
+        userId: userExists.id,
         role: addMemberDto.role,
       },
       include: {
@@ -253,22 +272,35 @@ export class ProjectsService {
   }
 
   async removeMember(projectId: string, memberId: string, userId: string) {
-    await this.verifyMemberPermission(projectId, userId, ['OWNER', 'ADMIN']);
-
-    const member = await this.prisma.projectMember.findFirst({
+    const requester = await this.prisma.projectMember.findFirst({
       where: {
         projectId,
-        userId: memberId,
+        userId,
       },
     });
 
-    if (!member) {
+    if (!requester) {
+      throw new ForbiddenException('You are not a member of this project');
+    }
+
+    const member = await this.prisma.projectMember.findUnique({
+      where: { id: memberId },
+    });
+
+    if (!member || member.projectId !== projectId) {
       throw new NotFoundException('Member not found');
     }
 
     // No permitir remover al owner
     if (member.role === 'OWNER') {
       throw new ForbiddenException('Cannot remove project owner');
+    }
+
+    const requesterRank = this.getRoleRank(requester.role);
+    const targetRank = this.getRoleRank(member.role);
+
+    if (requesterRank <= targetRank) {
+      throw new ForbiddenException('Insufficient permissions to remove this member');
     }
 
     return this.prisma.projectMember.delete({
@@ -299,5 +331,20 @@ export class ProjectsService {
     }
 
     return member;
+  }
+
+  private getRoleRank(role: string): number {
+    switch (role) {
+      case 'OWNER':
+        return 4;
+      case 'ADMIN':
+        return 3;
+      case 'MEMBER':
+        return 2;
+      case 'VIEWER':
+        return 1;
+      default:
+        return 0;
+    }
   }
 }

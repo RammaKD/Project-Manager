@@ -38,9 +38,9 @@ export class ProjectsService {
   }
 
   // Agregar miembro al proyecto
-  addMember(projectId: string, userId: string, role: string): Observable<any> {
+  addMember(projectId: string, email: string, role: string): Observable<any> {
     return this.http.post(`${this.API_URL}/${projectId}/members`, {
-      userId,
+      email,
       role
     });
   }

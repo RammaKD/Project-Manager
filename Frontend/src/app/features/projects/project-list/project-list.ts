@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ProjectsService } from '../../../core/services/projects-service';
+import { AuthService } from '../../../core/services/auth-service';
 import { Project } from '../../../core/models/project.model';
 
 @Component({
@@ -19,9 +20,10 @@ export class ProjectListComponent implements OnInit {
   deleteModalOpen = false;
   pendingDeleteId: string | null = null;
   pendingDeleteName = '';
+  currentUserId: string | null = null;
   searchTerm = '';
   sortOrder: 'newest' | 'oldest' = 'newest';
-  memberFilter: 'all' | '1-2' | '3-5' | '6+' = 'all';
+  memberFilter: 'all' | '1-5' | '6-10' | '11+' = 'all';
   pageSize = 2;
   currentPage = 1;
 
@@ -91,9 +93,15 @@ export class ProjectListComponent implements OnInit {
     return this.filteredProjects.slice(start, start + this.pageSize);
   }
 
-  constructor(private projectsService: ProjectsService) {}
+  constructor(
+    private projectsService: ProjectsService,
+    private authService: AuthService
+  ) {}
 
   ngOnInit(): void {
+    this.authService.currentUser$.subscribe((user) => {
+      this.currentUserId = user?.id || null;
+    });
     this.loadProjects();
   }
 
@@ -148,12 +156,12 @@ export class ProjectListComponent implements OnInit {
 
   private matchesMemberFilter(count: number): boolean {
     switch (this.memberFilter) {
-      case '1-2':
-        return count >= 1 && count <= 2;
-      case '3-5':
-        return count >= 3 && count <= 5;
-      case '6+':
-        return count >= 6;
+      case '1-5':
+        return count >= 1 && count <= 5;
+      case '6-10':
+        return count >= 6 && count <= 10;
+      case '11+':
+        return count >= 11;
       default:
         return true;
     }
@@ -178,5 +186,14 @@ export class ProjectListComponent implements OnInit {
         this.closeDeleteModal();
       }
     });
+  }
+
+  canDeleteProject(project: Project): boolean {
+    if (!this.currentUserId) {
+      return false;
+    }
+
+    const member = project.members.find((m) => m.userId === this.currentUserId);
+    return member?.role === 'OWNER';
   }
 }

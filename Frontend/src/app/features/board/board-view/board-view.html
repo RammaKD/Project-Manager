@@ -2,7 +2,14 @@
   <div class="board-header">
     <button class="btn-back" routerLink="/projects">← Back</button>
     <h2>Board<span class="board-subtitle" *ngIf="projectName"> · {{ projectName }}</span></h2>
-    <button class="btn-primary" (click)="openCreateModal()" [disabled]="columns.length === 0">+ New Task</button>
+    <button
+      class="btn-primary"
+      *ngIf="canCreateTasks()"
+      (click)="openCreateModal()"
+      [disabled]="columns.length === 0"
+    >
+      + New Task
+    </button>
   </div>
 
   <div class="board-state error" *ngIf="error">{{ error }}</div>
@@ -21,16 +28,23 @@
         [id]="column.id"
         [cdkDropListData]="column.tasks"
         [cdkDropListConnectedTo]="columnIds"
+        [cdkDropListDisabled]="!canCreateTasks()"
         (cdkDropListDropped)="drop($event)"
       >
         <div class="empty" *ngIf="column.tasks.length === 0">
           No tasks yet
         </div>
 
-        <div class="task-card" *ngFor="let task of column.tasks" cdkDrag>
+        <div
+          class="task-card"
+          *ngFor="let task of column.tasks"
+          cdkDrag
+          [cdkDragDisabled]="!canCreateTasks()"
+        >
           <div class="task-card-header">
             <div class="task-title">{{ task.title }}</div>
             <button
+              *ngIf="canCreateTasks()"
               class="task-edit"
               type="button"
               title="Edit task"
@@ -66,7 +80,7 @@
   </div>
 </div>
 
-<div class="modal-backdrop" *ngIf="createModalOpen">
+<div class="modal-backdrop" *ngIf="createModalOpen && canCreateTasks()">
   <div class="modal">
     <h3>Create task</h3>
     <div class="modal-body">

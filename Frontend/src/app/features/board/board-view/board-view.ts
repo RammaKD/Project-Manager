@@ -7,7 +7,8 @@ import { forkJoin, of, Observable } from 'rxjs';
 import { TasksService } from '../../../core/services/tasks-service';
 import { ProjectsService } from '../../../core/services/projects-service';
 import { LabelsService } from '../../../core/services/labels-service';
-import { Task, Project, Board, List, Label } from '../../../core/models/project.model';
+import { AuthService } from '../../../core/services/auth-service';
+import { Task, Project, Board, List, Label, ProjectMember } from '../../../core/models/project.model';
 import { RouterLink } from '@angular/router';
 
 type BoardTask = Task;
@@ -32,6 +33,8 @@ export class BoardViewComponent implements OnInit {
   projectLabels: Label[] = [];
   loading = false;
   error = '';
+  currentUserId: string | null = null;
+  currentUserRole: ProjectMember['role'] | null = null;
   createModalOpen = false;
   newTaskTitle = '';
   newTaskDescription = '';
@@ -75,12 +78,16 @@ export class BoardViewComponent implements OnInit {
     private route: ActivatedRoute,
     private tasksService: TasksService,
     private projectsService: ProjectsService,
-    private labelsService: LabelsService
+    private labelsService: LabelsService,
+    private authService: AuthService
   ) {
     this.projectId = this.route.snapshot.paramMap.get('id');
   }
 
   ngOnInit(): void {
+    this.authService.currentUser$.subscribe((user) => {
+      this.currentUserId = user?.id || null;
+    });
     const projectId = this.projectId;
     if (!projectId) {
       this.error = 'Project not found';
@@ -99,6 +106,7 @@ export class BoardViewComponent implements OnInit {
         this.projectName = project.name;
         this.columns = this.buildColumnsFromProject(project);
         this.projectLabels = (project.labels || []).slice().sort((a, b) => a.name.localeCompare(b.name));
+        this.currentUserRole = this.getMemberRole(project.members || []);
         if (!this.newTaskListId && this.columns.length > 0) {
           this.newTaskListId = this.columns[0].id;
         }
@@ -136,6 +144,9 @@ export class BoardViewComponent implements OnInit {
   }
 
   drop(event: CdkDragDrop<BoardTask[]>): void {
+    if (!this.canCreateTasks()) {
+      return;
+    }
     if (event.previousContainer === event.container) {
       moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
       const task = event.container.data[event.currentIndex];
@@ -174,6 +185,9 @@ export class BoardViewComponent implements OnInit {
   }
 
   openCreateModal(listId?: string): void {
+    if (!this.canCreateTasks()) {
+      return;
+    }
     this.newTaskTitle = '';
     this.newTaskDescription = '';
     this.newTaskPriority = 'MEDIUM';
@@ -191,7 +205,7 @@ export class BoardViewComponent implements OnInit {
   }
 
   createTask(): void {
-    if (!this.projectId || !this.newTaskTitle.trim() || !this.newTaskListId) {
+    if (!this.projectId || !this.newTaskTitle.trim() || !this.newTaskListId || !this.canCreateTasks()) {
       return;
     }
 
@@ -223,6 +237,21 @@ export class BoardViewComponent implements OnInit {
         this.error = err.error?.message || 'Error creating task';
       }
     });
+  }
+
+  canCreateTasks(): boolean {
+    return this.currentUserRole === 'OWNER'
+      || this.currentUserRole === 'ADMIN'
+      || this.currentUserRole === 'MEMBER';
+  }
+
+  private getMemberRole(members: ProjectMember[]): ProjectMember['role'] | null {
+    if (!this.currentUserId) {
+      return null;
+    }
+
+    const member = members.find((m) => m.userId === this.currentUserId);
+    return member?.role || null;
   }
 
   openEditModal(task: BoardTask, listId: string): void {

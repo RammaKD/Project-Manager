@@ -24,9 +24,9 @@
       <label for="memberFilter">Members</label>
       <select id="memberFilter" [(ngModel)]="memberFilter" (ngModelChange)="onFilterChange()">
         <option value="all">All</option>
-        <option value="1-2">1-2</option>
-        <option value="3-5">3-5</option>
-        <option value="6+">6+</option>
+        <option value="1-5">1-5</option>
+        <option value="6-10">6-10</option>
+        <option value="11+">11+</option>
       </select>
     </div>
   </div>
@@ -65,7 +65,13 @@
         <div class="project-actions">
           <a [routerLink]="['/projects', project.id]" class="btn-secondary">View</a>
           <a [routerLink]="['/projects', project.id, 'board']" class="btn-secondary">Board</a>
-            <button (click)="openDeleteModal(project)" class="btn-danger">Delete</button>
+          <button
+            *ngIf="canDeleteProject(project)"
+            (click)="openDeleteModal(project)"
+            class="btn-danger"
+          >
+            Delete
+          </button>
         </div>
       </div>
     </div>

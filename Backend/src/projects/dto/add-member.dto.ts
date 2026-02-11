@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsEnum } from 'class-validator';
+import { IsString, IsNotEmpty, IsEnum, IsOptional, IsEmail } from 'class-validator';
 
 export enum ProjectMemberRole {
   OWNER = 'OWNER',
@@ -10,7 +10,12 @@ export enum ProjectMemberRole {
 export class AddMemberDto {
   @IsString()
   @IsNotEmpty()
-  userId: string;
+  @IsOptional()
+  userId?: string;
+
+  @IsEmail()
+  @IsOptional()
+  email?: string;
 
   @IsEnum(ProjectMemberRole)
   role: ProjectMemberRole;

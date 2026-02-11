@@ -8,8 +8,17 @@ export class LabelsService {
   constructor(private prisma: PrismaService) {}
 
   async create(createLabelDto: CreateLabelDto, userId: string) {
+    const labelLimit = 30;
     // Verificar que el usuario es miembro del proyecto
     await this.verifyProjectMember(createLabelDto.projectId, userId, ['OWNER', 'ADMIN']);
+
+    const labelCount = await this.prisma.label.count({
+      where: { projectId: createLabelDto.projectId },
+    });
+
+    if (labelCount >= labelLimit) {
+      throw new ConflictException('Label limit reached for this project');
+    }
 
     // Verificar que no exista una etiqueta con el mismo nombre en el proyecto
     const existingLabel = await this.prisma.label.findFirst({

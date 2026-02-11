@@ -155,6 +155,11 @@
   cursor: grabbing;
 }
 
+.cdk-drop-list.cdk-drop-list-disabled .task-card,
+.task-card[cdkdragdisabled="true"] {
+  cursor: default;
+}
+
 .cdk-drag-preview {
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
   border-radius: 8px;

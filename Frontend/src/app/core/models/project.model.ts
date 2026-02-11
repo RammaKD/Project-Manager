@@ -105,6 +105,7 @@ export interface CreateProjectRequest {
 export interface UpdateProjectRequest {
   name?: string;
   description?: string;
+  key?: string;
   color?: string;
   startDate?: string;
   endDate?: string;

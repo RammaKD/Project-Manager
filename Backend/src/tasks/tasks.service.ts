@@ -10,7 +10,8 @@ export class TasksService {
 
   async create(createTaskDto: CreateTaskDto, userId: string) {
     // Verificar que el usuario es miembro del proyecto
-    await this.verifyProjectMember(createTaskDto.projectId, userId);
+    const member = await this.verifyProjectMember(createTaskDto.projectId, userId);
+    this.assertCanModifyTasks(member.role);
 
     // Verificar que la lista pertenece al proyecto
     const list = await this.prisma.list.findUnique({
@@ -192,7 +193,8 @@ export class TasksService {
       throw new NotFoundException('Task not found');
     }
 
-    await this.verifyProjectMember(task.projectId, userId);
+    const member = await this.verifyProjectMember(task.projectId, userId);
+    this.assertCanModifyTasks(member.role);
 
     // Si se cambia el assignee, verificar que sea miembro
     if (updateTaskDto.assignedToId) {
@@ -245,7 +247,8 @@ export class TasksService {
       throw new NotFoundException('Task not found');
     }
 
-    await this.verifyProjectMember(task.projectId, userId);
+    const member = await this.verifyProjectMember(task.projectId, userId);
+    this.assertCanModifyTasks(member.role);
 
     // Verificar que la nueva lista pertenece al mismo proyecto
     const newList = await this.prisma.list.findUnique({
@@ -343,7 +346,8 @@ export class TasksService {
       throw new NotFoundException('Task not found');
     }
 
-    await this.verifyProjectMember(task.projectId, userId);
+    const member = await this.verifyProjectMember(task.projectId, userId);
+    this.assertCanModifyTasks(member.role);
 
     return this.prisma.task.delete({
       where: { id },
@@ -363,5 +367,11 @@ export class TasksService {
     }
 
     return member;
+  }
+
+  private assertCanModifyTasks(role: string) {
+    if (role === 'VIEWER') {
+      throw new ForbiddenException('Insufficient permissions');
+    }
   }
 }
