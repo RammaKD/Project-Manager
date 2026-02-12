@@ -52,6 +52,8 @@ export class BoardViewComponent implements OnInit {
   editTaskListId = '';
   editTaskLabelIds: string[] = [];
   originalEditLabelIds: string[] = [];
+  commentsModalOpen = false;
+  commentsTask: BoardTask | null = null;
   comments: Comment[] = [];
   commentsLoading = false;
   commentsError = '';
@@ -311,16 +313,29 @@ export class BoardViewComponent implements OnInit {
     });
   }
 
+  openCommentsModal(task: BoardTask): void {
+    this.commentsTask = task;
+    this.commentsModalOpen = true;
+    this.resetCommentsState();
+    this.loadComments(task.id);
+  }
+
+  closeCommentsModal(): void {
+    this.commentsModalOpen = false;
+    this.commentsTask = null;
+    this.resetCommentsState();
+  }
+
   createComment(): void {
-    if (!this.editTask || !this.newCommentText.trim() || !this.canCreateComments()) {
+    if (!this.commentsTask || !this.newCommentText.trim() || !this.canCreateComments()) {
       return;
     }
 
     const content = this.newCommentText.trim();
-    this.commentsService.create({ taskId: this.editTask.id, content }).subscribe({
+    this.commentsService.create({ taskId: this.commentsTask.id, content }).subscribe({
       next: (comment) => {
         this.comments = [...this.comments, comment];
-        this.incrementTaskCommentCount(this.editTask?.id || '', 1);
+        this.incrementTaskCommentCount(this.commentsTask?.id || '', 1);
         this.newCommentText = '';
       },
       error: (err: any) => {
@@ -370,7 +385,7 @@ export class BoardViewComponent implements OnInit {
     this.commentsService.delete(comment.id).subscribe({
       next: () => {
         this.comments = this.comments.filter((item) => item.id !== comment.id);
-        this.incrementTaskCommentCount(this.editTask?.id || '', -1);
+        this.incrementTaskCommentCount(this.commentsTask?.id || '', -1);
       },
       error: (err: any) => {
         this.commentsError = err.error?.message || 'Error deleting comment';
@@ -388,14 +403,11 @@ export class BoardViewComponent implements OnInit {
     this.editTaskLabelIds = [...existingLabelIds];
     this.originalEditLabelIds = [...existingLabelIds];
     this.editModalOpen = true;
-    this.resetCommentsState();
-    this.loadComments(task.id);
   }
 
   closeEditModal(): void {
     this.editModalOpen = false;
     this.editTask = null;
-    this.resetCommentsState();
   }
 
   saveTask(): void {

@@ -1,8 +1,9 @@
-import { IsString, IsNotEmpty, IsUUID, Matches } from 'class-validator';
+import { IsString, IsNotEmpty, IsUUID, Matches, MaxLength } from 'class-validator';
 
 export class CreateLabelDto {
   @IsString()
   @IsNotEmpty()
+  @MaxLength(40)
   name: string;
 
   @IsString()

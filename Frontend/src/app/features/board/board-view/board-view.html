@@ -43,18 +43,28 @@
         >
           <div class="task-card-header">
             <div class="task-title">{{ task.title }}</div>
-            <span class="task-comments" *ngIf="getCommentCount(task) > 0">
-              {{ getCommentCount(task) }} comments
-            </span>
-            <button
-              *ngIf="canCreateTasks()"
-              class="task-edit"
-              type="button"
-              title="Edit task"
-              (click)="openEditModal(task, column.id); $event.stopPropagation()"
-            >
-              Edit
-            </button>
+            <div class="task-actions">
+              <span class="task-comments" *ngIf="getCommentCount(task) > 0">
+                {{ getCommentCount(task) }} comments
+              </span>
+              <button
+                class="task-comments-btn"
+                type="button"
+                title="View comments"
+                (click)="openCommentsModal(task); $event.stopPropagation()"
+              >
+                Comments
+              </button>
+              <button
+                *ngIf="canCreateTasks()"
+                class="task-edit"
+                type="button"
+                title="Edit task"
+                (click)="openEditModal(task, column.id); $event.stopPropagation()"
+              >
+                Edit
+              </button>
+            </div>
           </div>
           <div class="task-desc" *ngIf="task.description">{{ task.description }}</div>
           <span
@@ -180,10 +190,22 @@
           </label>
         </div>
       </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" (click)="closeEditModal()">Cancel</button>
+      <button class="btn-danger" (click)="openDeleteModal(editTask!)">Delete</button>
+      <button class="btn-primary" (click)="saveTask()" [disabled]="!editTaskTitle.trim()">Save</button>
+    </div>
+  </div>
+</div>
 
+<div class="modal-backdrop" *ngIf="commentsModalOpen">
+  <div class="modal">
+    <h3>Comments</h3>
+    <div class="modal-body">
       <div class="comments-section">
         <div class="comments-header">
-          <h4>Comments</h4>
+          <h4>{{ commentsTask?.title }}</h4>
           <span class="comments-error" *ngIf="commentsError">{{ commentsError }}</span>
         </div>
 
@@ -269,9 +291,7 @@
       </div>
     </div>
     <div class="modal-actions">
-      <button class="btn-secondary" (click)="closeEditModal()">Cancel</button>
-      <button class="btn-danger" (click)="openDeleteModal(editTask!)">Delete</button>
-      <button class="btn-primary" (click)="saveTask()" [disabled]="!editTaskTitle.trim()">Save</button>
+      <button class="btn-secondary" (click)="closeCommentsModal()">Close</button>
     </div>
   </div>
 </div>
