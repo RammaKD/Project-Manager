@@ -142,6 +142,11 @@ export class ProjectsService {
                         label: true,
                       },
                     },
+                    _count: {
+                      select: {
+                        comments: true,
+                      },
+                    },
                   },
                   orderBy: {
                     position: 'asc',

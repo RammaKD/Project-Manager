@@ -75,6 +75,9 @@ export interface Task {
   createdBy: User;
   labels: TaskLabel[];
   comments?: Comment[];
+  _count?: {
+    comments: number;
+  };
 }
 
 export interface TaskLabel {

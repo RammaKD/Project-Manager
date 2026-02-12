@@ -43,6 +43,9 @@
         >
           <div class="task-card-header">
             <div class="task-title">{{ task.title }}</div>
+            <span class="task-comments" *ngIf="getCommentCount(task) > 0">
+              {{ getCommentCount(task) }} comments
+            </span>
             <button
               *ngIf="canCreateTasks()"
               class="task-edit"
@@ -124,6 +127,7 @@
           </label>
         </div>
       </div>
+
     </div>
     <div class="modal-actions">
       <button class="btn-secondary" (click)="closeCreateModal()">Cancel</button>
@@ -174,6 +178,93 @@
             <span class="label-dot" [style.backgroundColor]="label.color"></span>
             <span class="label-text">{{ label.name }}</span>
           </label>
+        </div>
+      </div>
+
+      <div class="comments-section">
+        <div class="comments-header">
+          <h4>Comments</h4>
+          <span class="comments-error" *ngIf="commentsError">{{ commentsError }}</span>
+        </div>
+
+        <div class="comments-loading" *ngIf="commentsLoading">Loading comments...</div>
+
+        <div class="comments-empty" *ngIf="!commentsLoading && comments.length === 0">
+          No comments yet.
+        </div>
+
+        <div class="comments-list" *ngIf="!commentsLoading && comments.length > 0">
+          <div class="comment-item" *ngFor="let comment of comments">
+            <div class="comment-meta">
+              <span class="comment-author">
+                {{ comment.user.firstName }} {{ comment.user.lastName }}
+              </span>
+              <span class="comment-date">{{ comment.createdAt | date:'short' }}</span>
+            </div>
+
+            <div class="comment-body" *ngIf="editingCommentId !== comment.id">
+              {{ comment.content }}
+            </div>
+
+            <textarea
+              class="comment-edit"
+              *ngIf="editingCommentId === comment.id"
+              [(ngModel)]="editingCommentText"
+              rows="3"
+            ></textarea>
+
+            <div class="comment-actions">
+              <button
+                class="btn-link"
+                type="button"
+                *ngIf="editingCommentId !== comment.id && canEditComment(comment)"
+                (click)="startEditComment(comment)"
+              >
+                Edit
+              </button>
+              <button
+                class="btn-link"
+                type="button"
+                *ngIf="editingCommentId === comment.id"
+                (click)="saveCommentEdit()"
+                [disabled]="!editingCommentText.trim()"
+              >
+                Save
+              </button>
+              <button
+                class="btn-link"
+                type="button"
+                *ngIf="editingCommentId === comment.id"
+                (click)="cancelEditComment()"
+              >
+                Cancel
+              </button>
+              <button
+                class="btn-link danger"
+                type="button"
+                *ngIf="canDeleteComment(comment)"
+                (click)="deleteComment(comment)"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="comment-form" *ngIf="canCreateComments()">
+          <textarea
+            rows="3"
+            placeholder="Add a comment..."
+            [(ngModel)]="newCommentText"
+          ></textarea>
+          <button
+            class="btn-primary"
+            type="button"
+            (click)="createComment()"
+            [disabled]="!newCommentText.trim()"
+          >
+            Add Comment
+          </button>
         </div>
       </div>
     </div>

@@ -7,8 +7,9 @@ import { forkJoin, of, Observable } from 'rxjs';
 import { TasksService } from '../../../core/services/tasks-service';
 import { ProjectsService } from '../../../core/services/projects-service';
 import { LabelsService } from '../../../core/services/labels-service';
+import { CommentsService } from '../../../core/services/comments-service';
 import { AuthService } from '../../../core/services/auth-service';
-import { Task, Project, Board, List, Label, ProjectMember } from '../../../core/models/project.model';
+import { Task, Project, Board, List, Label, ProjectMember, Comment } from '../../../core/models/project.model';
 import { RouterLink } from '@angular/router';
 
 type BoardTask = Task;
@@ -51,6 +52,12 @@ export class BoardViewComponent implements OnInit {
   editTaskListId = '';
   editTaskLabelIds: string[] = [];
   originalEditLabelIds: string[] = [];
+  comments: Comment[] = [];
+  commentsLoading = false;
+  commentsError = '';
+  newCommentText = '';
+  editingCommentId: string | null = null;
+  editingCommentText = '';
 
   deleteModalOpen = false;
   pendingDeleteTask: BoardTask | null = null;
@@ -74,11 +81,20 @@ export class BoardViewComponent implements OnInit {
     }
   }
 
+  getCommentCount(task: BoardTask): number {
+    if (task._count && typeof task._count.comments === 'number') {
+      return task._count.comments;
+    }
+
+    return task.comments ? task.comments.length : 0;
+  }
+
   constructor(
     private route: ActivatedRoute,
     private tasksService: TasksService,
     private projectsService: ProjectsService,
     private labelsService: LabelsService,
+    private commentsService: CommentsService,
     private authService: AuthService
   ) {
     this.projectId = this.route.snapshot.paramMap.get('id');
@@ -245,6 +261,22 @@ export class BoardViewComponent implements OnInit {
       || this.currentUserRole === 'MEMBER';
   }
 
+  canCreateComments(): boolean {
+    return this.canCreateTasks();
+  }
+
+  canEditComment(comment: Comment): boolean {
+    return this.canCreateComments() && comment.userId === this.currentUserId;
+  }
+
+  canDeleteComment(comment: Comment): boolean {
+    if (comment.userId === this.currentUserId && this.canCreateComments()) {
+      return true;
+    }
+
+    return this.currentUserRole === 'OWNER' || this.currentUserRole === 'ADMIN';
+  }
+
   private getMemberRole(members: ProjectMember[]): ProjectMember['role'] | null {
     if (!this.currentUserId) {
       return null;
@@ -252,6 +284,98 @@ export class BoardViewComponent implements OnInit {
 
     const member = members.find((m) => m.userId === this.currentUserId);
     return member?.role || null;
+  }
+
+  private resetCommentsState(): void {
+    this.comments = [];
+    this.commentsLoading = false;
+    this.commentsError = '';
+    this.newCommentText = '';
+    this.editingCommentId = null;
+    this.editingCommentText = '';
+  }
+
+  private loadComments(taskId: string): void {
+    this.commentsLoading = true;
+    this.commentsError = '';
+    this.commentsService.getByTask(taskId).subscribe({
+      next: (comments) => {
+        this.comments = comments;
+        this.setTaskCommentCount(taskId, comments.length);
+        this.commentsLoading = false;
+      },
+      error: (err: any) => {
+        this.commentsError = err.error?.message || 'Error loading comments';
+        this.commentsLoading = false;
+      }
+    });
+  }
+
+  createComment(): void {
+    if (!this.editTask || !this.newCommentText.trim() || !this.canCreateComments()) {
+      return;
+    }
+
+    const content = this.newCommentText.trim();
+    this.commentsService.create({ taskId: this.editTask.id, content }).subscribe({
+      next: (comment) => {
+        this.comments = [...this.comments, comment];
+        this.incrementTaskCommentCount(this.editTask?.id || '', 1);
+        this.newCommentText = '';
+      },
+      error: (err: any) => {
+        this.commentsError = err.error?.message || 'Error creating comment';
+      }
+    });
+  }
+
+  startEditComment(comment: Comment): void {
+    if (!this.canEditComment(comment)) {
+      return;
+    }
+    this.editingCommentId = comment.id;
+    this.editingCommentText = comment.content;
+  }
+
+  cancelEditComment(): void {
+    this.editingCommentId = null;
+    this.editingCommentText = '';
+  }
+
+  saveCommentEdit(): void {
+    if (!this.editingCommentId || !this.editingCommentText.trim()) {
+      return;
+    }
+
+    const commentId = this.editingCommentId;
+    const content = this.editingCommentText.trim();
+    this.commentsService.update(commentId, { content }).subscribe({
+      next: (updated) => {
+        this.comments = this.comments.map((comment) =>
+          comment.id === updated.id ? updated : comment
+        );
+        this.cancelEditComment();
+      },
+      error: (err: any) => {
+        this.commentsError = err.error?.message || 'Error updating comment';
+      }
+    });
+  }
+
+  deleteComment(comment: Comment): void {
+    if (!this.canDeleteComment(comment)) {
+      return;
+    }
+
+    this.commentsService.delete(comment.id).subscribe({
+      next: () => {
+        this.comments = this.comments.filter((item) => item.id !== comment.id);
+        this.incrementTaskCommentCount(this.editTask?.id || '', -1);
+      },
+      error: (err: any) => {
+        this.commentsError = err.error?.message || 'Error deleting comment';
+      }
+    });
   }
 
   openEditModal(task: BoardTask, listId: string): void {
@@ -264,11 +388,14 @@ export class BoardViewComponent implements OnInit {
     this.editTaskLabelIds = [...existingLabelIds];
     this.originalEditLabelIds = [...existingLabelIds];
     this.editModalOpen = true;
+    this.resetCommentsState();
+    this.loadComments(task.id);
   }
 
   closeEditModal(): void {
     this.editModalOpen = false;
     this.editTask = null;
+    this.resetCommentsState();
   }
 
   saveTask(): void {
@@ -345,6 +472,38 @@ export class BoardViewComponent implements OnInit {
     ];
 
     return requests.length > 0 ? forkJoin(requests) : of([]);
+  }
+
+  private setTaskCommentCount(taskId: string, count: number): void {
+    if (!taskId) {
+      return;
+    }
+
+    this.columns = this.columns.map((column) => ({
+      ...column,
+      tasks: column.tasks.map((task) =>
+        task.id === taskId
+          ? { ...task, _count: { comments: Math.max(0, count) } }
+          : task
+      )
+    }));
+  }
+
+  private incrementTaskCommentCount(taskId: string, delta: number): void {
+    if (!taskId || delta === 0) {
+      return;
+    }
+
+    this.columns = this.columns.map((column) => ({
+      ...column,
+      tasks: column.tasks.map((task) => {
+        if (task.id !== taskId) {
+          return task;
+        }
+        const current = this.getCommentCount(task);
+        return { ...task, _count: { comments: Math.max(0, current + delta) } };
+      })
+    }));
   }
 
   openDeleteModal(task: BoardTask): void {

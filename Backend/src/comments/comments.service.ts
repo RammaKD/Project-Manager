@@ -18,7 +18,10 @@ export class CommentsService {
     }
 
     // Verificar que el usuario es miembro del proyecto
-    await this.verifyProjectMember(task.projectId, userId);
+    const member = await this.verifyProjectMember(task.projectId, userId);
+    if (member.role === 'VIEWER') {
+      throw new ForbiddenException('Insufficient permissions');
+    }
 
     const comment = await this.prisma.comment.create({
       data: {
@@ -92,6 +95,11 @@ export class CommentsService {
       throw new NotFoundException('Comment not found');
     }
 
+    const member = await this.verifyProjectMember(comment.task.projectId, userId);
+    if (member.role === 'VIEWER') {
+      throw new ForbiddenException('Insufficient permissions');
+    }
+
     // Solo el autor puede editar su comentario
     if (comment.userId !== userId) {
       throw new ForbiddenException('You can only edit your own comments');
@@ -124,14 +132,10 @@ export class CommentsService {
     }
 
     // Verificar permisos (autor o admin del proyecto)
-    const member = await this.prisma.projectMember.findFirst({
-      where: {
-        projectId: comment.task.projectId,
-        userId,
-      },
-    });
-
-    const canDelete = comment.userId === userId || member?.role === 'OWNER' || member?.role === 'ADMIN';
+    const member = await this.verifyProjectMember(comment.task.projectId, userId);
+    const canDelete = (comment.userId === userId && member.role !== 'VIEWER')
+      || member.role === 'OWNER'
+      || member.role === 'ADMIN';
 
     if (!canDelete) {
       throw new ForbiddenException('Insufficient permissions to delete this comment');
