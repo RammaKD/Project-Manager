@@ -1,5 +1,5 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://tu-api-en-produccion.com', // Cambiar esto al hacer deploy
+  apiUrl: 'https://project-manager-ws0p.onrender.com',
   tokenKey: 'access_token'
 };
