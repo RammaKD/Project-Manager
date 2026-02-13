@@ -227,6 +227,16 @@ export class BoardViewComponent implements OnInit {
       return;
     }
 
+    if (!this.isValidTaskTitle(this.newTaskTitle)) {
+      this.error = 'Task title must be 140 characters or less.';
+      return;
+    }
+
+    if (!this.isValidTaskDescription(this.newTaskDescription)) {
+      this.error = 'Task description must be 2000 characters or less.';
+      return;
+    }
+
     this.tasksService.create({
       title: this.newTaskTitle.trim(),
       description: this.newTaskDescription.trim() || undefined,
@@ -332,6 +342,10 @@ export class BoardViewComponent implements OnInit {
     }
 
     const content = this.newCommentText.trim();
+    if (content.length > 1000) {
+      this.commentsError = 'Comment must be 1000 characters or less.';
+      return;
+    }
     this.commentsService.create({ taskId: this.commentsTask.id, content }).subscribe({
       next: (comment) => {
         this.comments = [...this.comments, comment];
@@ -364,6 +378,10 @@ export class BoardViewComponent implements OnInit {
 
     const commentId = this.editingCommentId;
     const content = this.editingCommentText.trim();
+    if (content.length > 1000) {
+      this.commentsError = 'Comment must be 1000 characters or less.';
+      return;
+    }
     this.commentsService.update(commentId, { content }).subscribe({
       next: (updated) => {
         this.comments = this.comments.map((comment) =>
@@ -412,6 +430,16 @@ export class BoardViewComponent implements OnInit {
 
   saveTask(): void {
     if (!this.editTask || !this.projectId) {
+      return;
+    }
+
+    if (!this.isValidTaskTitle(this.editTaskTitle)) {
+      this.error = 'Task title must be 140 characters or less.';
+      return;
+    }
+
+    if (!this.isValidTaskDescription(this.editTaskDescription)) {
+      this.error = 'Task description must be 2000 characters or less.';
       return;
     }
 
@@ -464,6 +492,14 @@ export class BoardViewComponent implements OnInit {
     }
 
     this.editTaskLabelIds = this.updateLabelSelection(this.editTaskLabelIds, labelId, checked);
+  }
+
+  private isValidTaskTitle(title: string): boolean {
+    return title.trim().length > 0 && title.trim().length <= 140;
+  }
+
+  private isValidTaskDescription(description: string): boolean {
+    return description.trim().length <= 2000;
   }
 
   private updateLabelSelection(current: string[], labelId: string, checked: boolean): string[] {

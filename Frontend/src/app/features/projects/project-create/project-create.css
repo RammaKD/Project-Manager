@@ -118,6 +118,12 @@
   border: 1px solid #f5c6cb;
 }
 
+.field-error {
+  color: #ff8a8a;
+  font-size: 12px;
+  margin-top: 6px;
+}
+
 .btn-submit {
   width: 100%;
   padding: 10px;

@@ -22,10 +22,10 @@ export class ProjectCreateComponent {
     private router: Router
   ) {
     this.projectForm = this.fb.group({
-      name: ['', [Validators.required]],
-      key: ['', [Validators.required]],
-      description: [''],
-      color: ['#007bff']
+      name: ['', [Validators.required, Validators.maxLength(120)]],
+      key: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(10)]],
+      description: ['', [Validators.maxLength(2000)]],
+      color: ['#007bff', [Validators.required]]
     });
   }
 
@@ -46,5 +46,17 @@ export class ProjectCreateComponent {
         this.loading = false;
       }
     });
+  }
+
+  get name() {
+    return this.projectForm.get('name');
+  }
+
+  get key() {
+    return this.projectForm.get('key');
+  }
+
+  get description() {
+    return this.projectForm.get('description');
   }
 }

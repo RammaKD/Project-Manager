@@ -28,9 +28,10 @@
       <form class="edit-form" [formGroup]="editForm" (ngSubmit)="saveEdit()">
         <div class="form-group">
           <label for="edit-name">Project Name</label>
-          <input id="edit-name" type="text" formControlName="name" placeholder="My Awesome Project" />
+          <input id="edit-name" type="text" maxlength="120" formControlName="name" placeholder="My Awesome Project" />
           <div class="field-error" *ngIf="editNameControl?.touched && editNameControl?.invalid">
-            Name is required.
+            <span *ngIf="editNameControl?.errors?.['required']">Name is required.</span>
+            <span *ngIf="editNameControl?.errors?.['maxlength']">Name is too long.</span>
           </div>
         </div>
 
@@ -44,7 +45,10 @@
 
         <div class="form-group">
           <label for="edit-desc">Description</label>
-          <textarea id="edit-desc" rows="3" formControlName="description" placeholder="Project description..."></textarea>
+          <textarea id="edit-desc" rows="3" maxlength="2000" formControlName="description" placeholder="Project description..."></textarea>
+          <div class="field-error" *ngIf="editDescriptionControl?.touched && editDescriptionControl?.errors?.['maxlength']">
+            Description is too long.
+          </div>
         </div>
 
         <div class="form-group color-group">
@@ -101,7 +105,7 @@
         <select [(ngModel)]="newMemberRole">
           <option *ngFor="let role of memberRoles" [value]="role">{{ role }}</option>
         </select>
-        <button class="member-add-btn" (click)="addMember()" [disabled]="!newMemberEmail.trim()">
+        <button class="member-add-btn" (click)="addMember()" [disabled]="!isValidMemberEmail()">
           Add Member
         </button>
       </div>
@@ -135,9 +139,10 @@
           type="text"
           placeholder="Label name"
           [(ngModel)]="newLabelName"
+          maxlength="40"
         />
         <input type="color" [(ngModel)]="newLabelColor" />
-        <button class="label-add-btn" (click)="createLabel()" [disabled]="!newLabelName.trim()">
+        <button class="label-add-btn" (click)="createLabel()" [disabled]="!isValidLabelName()">
           Add
         </button>
       </div>

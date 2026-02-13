@@ -40,9 +40,9 @@ export class ProjectDetailComponent implements OnInit {
     private route: ActivatedRoute
   ) {
     this.editForm = this.fb.group({
-      name: ['', [Validators.required]],
+      name: ['', [Validators.required, Validators.maxLength(120)]],
       key: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(10)]],
-      description: [''],
+      description: ['', [Validators.maxLength(2000)]],
       color: ['#3b82f6', [Validators.required]]
     });
   }
@@ -77,7 +77,8 @@ export class ProjectDetailComponent implements OnInit {
   }
 
   addMember(): void {
-    if (!this.project || !this.newMemberEmail.trim()) {
+    if (!this.project || !this.isValidMemberEmail()) {
+      this.memberError = 'Enter a valid email address.';
       return;
     }
 
@@ -229,6 +230,10 @@ export class ProjectDetailComponent implements OnInit {
     return this.editForm.get('key');
   }
 
+  get editDescriptionControl() {
+    return this.editForm.get('description');
+  }
+
   private resetEditForm(project: Project): void {
     this.editForm.patchValue({
       name: project.name,
@@ -241,7 +246,10 @@ export class ProjectDetailComponent implements OnInit {
   }
 
   createLabel(): void {
-    if (!this.project || !this.newLabelName.trim()) {
+    if (!this.project || !this.isValidLabelName()) {
+      this.labelError = this.newLabelName.trim().length > 40
+        ? 'Label name must be 40 characters or less.'
+        : 'Label name is required.';
       return;
     }
 
@@ -278,5 +286,18 @@ export class ProjectDetailComponent implements OnInit {
         this.labelError = err.error?.message || 'Error deleting label';
       }
     });
+  }
+
+  isValidLabelName(): boolean {
+    const name = this.newLabelName.trim();
+    return name.length > 0 && name.length <= 40;
+  }
+
+  isValidMemberEmail(): boolean {
+    const email = this.newMemberEmail.trim();
+    if (!email || email.length > 320) {
+      return false;
+    }
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   }
 }

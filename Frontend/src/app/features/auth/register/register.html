@@ -21,6 +21,8 @@
         />
         <div class="error-message" *ngIf="firstName?.invalid && firstName?.touched">
           <span *ngIf="firstName?.errors?.['required']">First name is required</span>
+          <span *ngIf="firstName?.errors?.['minlength']">First name must be at least 2 characters</span>
+          <span *ngIf="firstName?.errors?.['maxlength']">First name is too long</span>
         </div>
       </div>
 
@@ -36,6 +38,8 @@
         />
         <div class="error-message" *ngIf="lastName?.invalid && lastName?.touched">
           <span *ngIf="lastName?.errors?.['required']">Last name is required</span>
+          <span *ngIf="lastName?.errors?.['minlength']">Last name must be at least 2 characters</span>
+          <span *ngIf="lastName?.errors?.['maxlength']">Last name is too long</span>
         </div>
       </div>
 
@@ -52,22 +56,66 @@
         <div class="error-message" *ngIf="email?.invalid && email?.touched">
           <span *ngIf="email?.errors?.['required']">Email is required</span>
           <span *ngIf="email?.errors?.['email']">Invalid email format</span>
+          <span *ngIf="email?.errors?.['minlength']">Email must be at least 5 characters</span>
+          <span *ngIf="email?.errors?.['maxlength']">Email is too long</span>
         </div>
       </div>
 
       <!-- Password -->
       <div class="form-group">
         <label for="password">Password</label>
-        <input
-          id="password"
-          type="password"
-          formControlName="password"
-          placeholder="••••••••"
-          [class.error]="password?.invalid && password?.touched"
-        />
+        <div class="password-field">
+          <input
+            id="password"
+            [type]="showPassword ? 'text' : 'password'"
+            formControlName="password"
+            placeholder="••••••••"
+            [class.error]="password?.invalid && password?.touched"
+          />
+          <button
+            type="button"
+            class="toggle-password"
+            (click)="togglePasswordVisibility()"
+            [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'"
+          >
+            {{ showPassword ? 'Hide' : 'Show' }}
+          </button>
+        </div>
         <div class="error-message" *ngIf="password?.invalid && password?.touched">
           <span *ngIf="password?.errors?.['required']">Password is required</span>
-          <span *ngIf="password?.errors?.['minlength']">Password must be at least 6 characters</span>
+          <span *ngIf="password?.errors?.['minlength']">Password must be at least 8 characters</span>
+          <span *ngIf="password?.errors?.['maxlength']">Password is too long</span>
+          <span *ngIf="password?.errors?.['pattern']">Must include 1 uppercase letter and 1 number</span>
+        </div>
+      </div>
+
+      <!-- Confirm Password -->
+      <div class="form-group">
+        <label for="confirmPassword">Confirm Password</label>
+        <div class="password-field">
+          <input
+            id="confirmPassword"
+            [type]="showConfirmPassword ? 'text' : 'password'"
+            formControlName="confirmPassword"
+            placeholder="••••••••"
+            [class.error]="confirmPassword?.invalid && confirmPassword?.touched || (registerForm.errors?.['passwordMismatch'] && confirmPassword?.touched)"
+          />
+          <button
+            type="button"
+            class="toggle-password"
+            (click)="toggleConfirmPasswordVisibility()"
+            [attr.aria-label]="showConfirmPassword ? 'Hide password' : 'Show password'"
+          >
+            {{ showConfirmPassword ? 'Hide' : 'Show' }}
+          </button>
+        </div>
+        <div class="error-message" *ngIf="confirmPassword?.touched && confirmPassword?.invalid">
+          <span *ngIf="confirmPassword?.errors?.['required']">Confirmation is required</span>
+          <span *ngIf="confirmPassword?.errors?.['minlength']">Password must be at least 8 characters</span>
+          <span *ngIf="confirmPassword?.errors?.['maxlength']">Password is too long</span>
+        </div>
+        <div class="error-message" *ngIf="confirmPassword?.touched && registerForm.errors?.['passwordMismatch']">
+          Passwords do not match
         </div>
       </div>
 
@@ -77,7 +125,7 @@
       </div>
 
       <!-- Submit button -->
-      <button type="submit" [disabled]="loading || registerForm.invalid">
+      <button type="submit" class="submit-btn" [disabled]="loading || registerForm.invalid">
         <span *ngIf="!loading">Create Account</span>
         <span *ngIf="loading">Loading...</span>
       </button>

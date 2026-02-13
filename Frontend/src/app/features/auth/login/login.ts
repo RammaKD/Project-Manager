@@ -15,6 +15,7 @@ export class LoginComponent {
   loginForm: FormGroup;
   loading = false;
   error = '';
+  showPassword = false;
 
   constructor(
     private fb: FormBuilder,
@@ -22,8 +23,8 @@ export class LoginComponent {
     private router: Router
   ) {
     this.loginForm = this.fb.group({
-      email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(6)]]
+      email: ['', [Validators.required, Validators.email, Validators.minLength(5), Validators.maxLength(320)]],
+      password: ['', [Validators.required, Validators.minLength(8), Validators.maxLength(128)]]
     });
   }
 
@@ -54,10 +55,7 @@ export class LoginComponent {
     return this.loginForm.get('password');
   }
 
-  autofill(): void {
-    this.loginForm.setValue({
-      email: 'ramiro@mail.com',
-      password: 'password123'
-    });
+  togglePasswordVisibility(): void {
+    this.showPassword = !this.showPassword;
   }
 }

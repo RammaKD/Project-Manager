@@ -13,7 +13,13 @@
           type="text"
           formControlName="name"
           placeholder="My Awesome Project"
+          maxlength="120"
+          [class.error]="name?.invalid && name?.touched"
         />
+        <div class="field-error" *ngIf="name?.touched && name?.invalid">
+          <span *ngIf="name?.errors?.['required']">Name is required.</span>
+          <span *ngIf="name?.errors?.['maxlength']">Name is too long.</span>
+        </div>
       </div>
 
       <!-- Key -->
@@ -24,7 +30,13 @@
           type="text"
           formControlName="key"
           placeholder="MAP"
+          maxlength="10"
+          [class.error]="key?.invalid && key?.touched"
         />
+        <div class="field-error" *ngIf="key?.touched && key?.invalid">
+          <span *ngIf="key?.errors?.['required']">Key is required.</span>
+          <span *ngIf="key?.errors?.['minlength'] || key?.errors?.['maxlength']">Key must be 2-10 characters.</span>
+        </div>
       </div>
 
       <!-- Description -->
@@ -35,7 +47,12 @@
           formControlName="description"
           placeholder="Project description..."
           rows="4"
+          maxlength="2000"
+          [class.error]="description?.invalid && description?.touched"
         ></textarea>
+        <div class="field-error" *ngIf="description?.touched && description?.errors?.['maxlength']">
+          Description is too long.
+        </div>
       </div>
 
       <!-- Color -->
