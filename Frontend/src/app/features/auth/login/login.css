@@ -97,6 +97,14 @@ input.error {
   margin-top: 6px;
 }
 
+.error-message span {
+  display: block;
+}
+
+.error-message span + span {
+  margin-top: 2px;
+}
+
 .password-field {
   position: relative;
   display: flex;

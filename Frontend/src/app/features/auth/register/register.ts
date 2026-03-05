@@ -50,7 +50,10 @@ export class RegisterComponent {
     this.loading = true;
     this.error = '';
 
-    this.authService.register(this.registerForm.value).subscribe({
+    const { firstName, lastName, email, password } = this.registerForm.value;
+    const registerPayload = { firstName, lastName, email, password };
+
+    this.authService.register(registerPayload).subscribe({
       next: () => {
         this.router.navigate(['/projects']);
       },
